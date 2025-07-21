@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Game {{ game.id }} – Spy vs Comrade{% endblock %}
+
+{% block content %}
+
+<h2>Game ID {{ game.id }}</h2>
+
+<div class="chat-scroll">
+  <ul id="chat">
+    {% for m in msgs %}
+    {% if m.role == 'Player' %}
+    {% set cls = 'player1' if m.sender=='player1' else 'player2' %}
+    {% set correct = (cls=='player1' and m.guess==game.player2_secret) or
+                     (cls=='player2' and m.guess==game.player1_secret) %}
+    <li class="chat-line {{ cls }}" data-id="{{ m.id }}">
+      {% if cls == 'player1' %}<span class="avatar">🧑‍🚀</span>{% endif %}
+  
+      <span class="msg">
+        {{ m.text }}
+  
+      </span>
+  
+      {% if cls == 'player2' %}<span class="avatar">🧑‍💻</span>{% endif %}
+    </li>
+  {% else %}
+  
+      <li class="chat-line agent" data-id="{{ m.id }}">
+        <span class="avatar">{{ '🫡' if m.role=='Comrade' else '🕵️' }}</span>
+
+        <details class="agent-note">
+          {#  ▸ collapsed line the user sees #}
+          <summary class="agent-summary">
+            Zaz guessed&nbsp;{{ m.guess or '—' }}
+          </summary>
+      
+          {#  ▾ revealed on click #}
+          <div class="msg agent-hidden">
+            {{ m.text }}
+          </div>
+        </details>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+
+{% if game.status.value in ['PLAY', 'PARTIAL'] %}
+  <div id="input-area">
+    <form method="post" action="{{ url_for('send', game_id=game.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input name="text" placeholder="Message…" autocomplete="off" required>
+      <input name="guess" placeholder="Guess (opt)">
+      <button type="submit">Send</button>
+    </form>
+    <p id="turn-counter" class="turn-chip" data-current="{{ game.turns }}"
+    data-max="{{ max_turns }}">
+      <span class="bar"></span>
+      <span class="txt">Turns: {{ game.turns }}/{{ max_turns }}</span>
+    </p>
+      </div>
+
+      {% if game.status.value == 'PARTIAL' %}
+      <p class="meta-chip">
+        {% if game.p1_guessed %}
+          🧑‍🚀 Player 1 guessed correctly “<strong>{{ game.player2_secret }}</strong>” ✓ —
+        {% else %}
+          🧑‍💻 Player 2 guessed correctly “<strong>{{ game.player1_secret }}</strong>” ✓ —
+        {% endif %}
+        waiting for the other player…
+      </p>
+      {% endif %}
+    {% elif game.status.value == 'WIN' %}
+  <p class="status-win">🎉 You both guessed correctly – You WIN!</p>
+  <p class="status-win">🎉 Player1's word: {{game.status.player1}}</p>
+  <p class="status-win">🎉 Player2's word: {{game.status.player2}}</p>
+  <p class="replay-link">
+    📄 <a href="{{ url_for('download_replay', game_id=game.id) }}" target="_blank" rel="noopener">
+        Download Game Replay Log
+      </a>
+    <small>(may expire later)</small>
+  </p>
+  {% elif game.status.value == 'LOSE' %}
+  <p class="status-lose">💀 ZaZ guessed first – You LOSE!</p>
+{% endif %}
+
+
+
+<script>
+  let lastMessageId = Number(document.querySelector("#chat li:last-child")?.dataset.id) || 0;
+  let polling = true;
+  const GAME_ID = "{{ game.id }}";
+  function renderMessage(m) {
+    if (document.querySelector(`#chat li[data-id='${m.id}']`)) return;
+
+    const li = document.createElement("li");
+    li.className = `chat-line ${m.role.toLowerCase()}`;
+    li.dataset.id = m.id;
+
+    if (m.role === "Player") {
+  const cls   = m.sender === "player1" ? "player1" : "player2";
+  const left  = m.sender === "player1";
+  
+  const guessHtml = m.guess ? ` <span class="guess">(guessed: ${m.guess}) ✓correct!</span>` : "";
+
+  li.className = `chat-line ${cls}`;
+    li.innerHTML =
+    (left ? `<span class="avatar">🧑‍🚀</span>` : "") +
+    `<span class="msg">${m.text}${guessHtml}</span>` +
+    (!left ? `<span class="avatar">🧑‍💻</span>` : "");
+}
+ else {
+      li.innerHTML = `
+    <span class="avatar">${m.role === "Comrade" ? "🫡" : "🕵️"}</span>
+
+    <details class="agent-note">
+      <summary class="agent-summary">Zaz&nbsp;guessed&nbsp;${m.guess || "—"}</summary>
+      <div class="msg agent-hidden">${m.text}</div>
+    </details>
+  `;
+    }
+
+    return li;
+  }
+
+  setInterval(() => {
+    if (!polling) return;
+
+    fetch(`/poll/{{ game.id }}?after_id=${lastMessageId}`)
+      .then(res => res.json())
+      .then(data => {
+        data.messages.forEach(m => {
+          document.querySelector("#chat").appendChild(renderMessage(m));
+          lastMessageId = Math.max(lastMessageId, m.id);
+        });
+
+        if (data.turns !== undefined) {
+          updateTurnBar(data.turns, parseInt(document.getElementById("turn-counter").dataset.max, 10));
+        }
+
+        if (data.status === "WIN" || data.status === "LOSE") {
+          polling = false;
+
+          // Remove or disable form
+          const inputArea = document.getElementById("input-area");
+          if (inputArea) inputArea.remove();
+
+          // Add win/lose message
+          const statusEl = document.createElement("p");
+          if (data.status === "WIN") {
+          statusEl.className = "status-win";
+          statusEl.innerHTML = `
+            🎉 You both guessed correctly – You WIN!<br>
+            🎉 Player1's word: ${data.player1_secret}<br>
+            🎉 Player2's word: ${data.player2_secret}
+          `;
+          }
+          else {
+            statusEl.className = "status-lose";
+            statusEl.innerText = `💀 ZaZ guessed first – You LOSE!<br>
+            🎉 Player1's word: ${data.player1_secret}<br>
+            🎉 Player2's word: ${data.player2_secret}`;
+          }
+          document.body.appendChild(statusEl);
+          const popup = document.createElement("div");
+          popup.className = "replay-popup";
+          popup.innerHTML =
+            `📄 <a href="/g/${GAME_ID}/replay" target="_blank" rel="noopener">
+                Download Game Replay Log
+              </a><br><small>(Link expires)</small>`;
+          document.body.appendChild(popup);
+
+          // Optionally redirect to replay page after short delay
+          // setTimeout(() => {
+          //   window.location.href = "/replay/{{ game.id }}";
+          // }, 4000); // adjust delay as you like
+        }
+      });
+  }, 3000);
+</script>
+
+
+{% endblock %}

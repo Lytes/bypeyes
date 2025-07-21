@@ -1,0 +1,187 @@
+/* ───────── Tokens ───────── */
+:root{
+  /* Foundations */
+  --bg            : #18191c;      /* page backdrop – very dark slate */
+  --surface       : #222428;      /* card & nav */
+  --surface-alt   : #2b2d31;      /* chat bubble base for greys */
+  --border        : #333538;
+  --text          : #e6e6e7;
+
+  /* Roles */
+  --p1            : #4f9df7;      /* calm blue */
+  --p2            : #00b894;      /* teal */
+  --agent         : #c62828;      /* red */
+}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;justify-content:center;align-items:center;z-index:2000;}
+.modal.hidden{display:none;}
+.modal-card{background:var(--surface);padding:1.5rem 2rem;border-radius:10px;max-width:520px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,.45);text-align:center;}
+.modal-card h3{margin-bottom:.8rem;}
+.help-btn{background:none;border:none;color:var(--text);font-size:.9rem;cursor:pointer;}
+.help-btn:hover{text-decoration:underline;}
+.close-btn{margin-top:1rem;background:var(--p1);color:#fff;border:none;padding:.5rem 1.1rem;border-radius:6px;cursor:pointer;}
+
+/* Inline info card used on index & join pages */
+.info-card{background:var(--surface);padding:1rem 1.25rem;border-radius:8px;margin-bottom:1.25rem;font-size:.95rem;line-height:1.4;}
+
+.correct-tag{
+  font-weight:600;
+  color:var(--accent-color);   /* or any accent you prefer */
+  margin-left:.35rem;
+}
+
+
+.replay-popup{
+  position:fixed;
+  bottom:1.25rem; right:1.25rem;
+  background:var(--surface);
+  color:var(--text);
+  padding:.75rem 1rem;
+  border-radius:8px;
+  box-shadow:0 4px 10px rgba(0,0,0,.45);
+  z-index:1000;
+  font-size:.9rem;
+}
+.replay-popup a{color:var(--p1);font-weight:600}
+/* ───────── Global Reset ───────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font: 15px/1.45 "Inter",system-ui,sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display:flex;flex-direction:column;min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+
+/* subtle collapsed line */
+.agent-summary{
+  list-style:none;                   /* hide default arrow */
+  color:#bbb;
+  font-style:italic;
+  cursor:pointer;
+  user-select:none;
+}
+
+.agent-summary::before{
+  content:"❯";
+  display:inline-block;
+  margin-right:.35rem;
+  transition:transform .2s ease;
+}
+
+/* rotate when open */
+details[open] .agent-summary::before{
+  transform:rotate(90deg);
+}
+
+/* ───────── Layout Shell ───────── */
+nav{
+  background:var(--surface);
+  padding:.75rem 1rem;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 2px 4px rgba(0,0,0,.4);
+}
+nav .brand{font-weight:600;font-size:1.1rem}
+nav a:hover{text-decoration:underline}
+
+.container{
+  flex:1;
+  max-width:720px;
+  width:100%;
+  margin:0 auto;
+  padding:1rem;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ───────── Chat Scroll Area ───────── */
+.chat-scroll{flex:1;overflow-y:auto;padding-right:.25rem}
+
+/* ───────── Chat Lines ───────── */
+.chat-line{
+  display:flex;gap:.55rem;align-items:flex-start;
+  margin-bottom:.35rem;
+}
+.chat-line .avatar{font-size:1.6rem;line-height:1}
+.msg{
+  padding:.55rem .75rem;
+  border-radius:6px;
+  max-width:80%;
+  word-break:break-word;
+  font-size:.95rem;
+}
+
+/* Player bubbles */
+.player1 .msg{background:var(--p1);color:#fff}
+.player2{flex-direction:row-reverse}
+.player2 .msg{background:var(--p2);color:#000}
+
+/* Agent bubble */
+.agent .msg{
+  background:var(--surface-alt);
+  color:var(--agent);
+  border:1px solid var(--agent);
+}
+.guess{font-style:italic;color:var(--text);margin-left:.25rem}
+
+/* ───────── Input Bar ───────── */
+#input-area{
+  display:flex;gap:.5rem;flex-direction:column;margin-top:.5rem;
+}
+#input-area form{
+display:flex;gap:.45rem
+}
+input,button{
+  font: inherit;
+  padding:.55rem .6rem;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--surface-alt);
+  color:var(--text);
+}
+input:focus{outline:1px solid var(--p1)}
+button{
+  background:var(--p1);
+  color:#fff;
+  cursor:pointer;
+}
+button:hover{filter:brightness(0.9)}
+/* guess field smaller */
+input[name="guess"]{flex:0 0 45%}
+
+/* Meta chip / status msg */
+.meta-chip{background:var(--surface-alt);padding:.25rem .5rem;border-radius:6px;font-size:.8rem}
+
+/* ───────── Mobile ───────── */
+@media(max-width:600px){
+  body{font-size:14px}
+  .container{padding:.5rem}
+  #input-area form{flex-direction:column}
+  input[name="guess"]{flex:unset}
+}
+
+/* ───── Turn-counter progress chip (NEW) ───── */
+.turn-chip{
+  position:relative;
+  display:inline-block;
+  overflow:hidden;
+  padding:.25rem .65rem;     /* extra room for outline */
+  border-radius:6px;
+  font-size:.8rem;
+  font-weight:600;
+  color:#fff;
+  -webkit-text-stroke:1px #000;   /* black outline around white text */
+}
+.turn-chip .bar{
+  position:absolute;inset:0;
+  background:var(--p1);
+  z-index:-1;
+  width:0%;                       /* updated from JS */
+  transition:width .4s ease;
+}
+/* optional: chip border */
+.turn-chip{border:1px solid var(--border)}
+/* ───── Input sizes ───── */
+
+input[name="text"] {flex:1}          /* primary message field dominates */
+input[name="guess"]{flex:0 0 38%}    /* smaller guess box */

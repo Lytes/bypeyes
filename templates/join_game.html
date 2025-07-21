@@ -1,0 +1,21 @@
+<!-- templates/join_game.html (Join Game) -->
+{% extends "base.html" %}
+{% block title %}Join Game – Bypeyes{% endblock %}
+
+{% block content %}
+<div class="centered-content">
+  <!-- Same gameplay description -->
+  <div class="info-card" >
+    <p>Each player has a secret word. Can you chat without the AI moderator guessing yours? Can you outsmart an AI?</p><br>
+    <p>Every player gets a secret word, and you have to talk to other players without saying your word, but you can give tips that can help them understand you. Meanwhile, there's an AI moderator that's reading everything, and trying to guess your secret word from the words you send. So your job is to give good hints, but still trick the robot so it can’t guess your secret word. If the AI guesses your word, you lose. If your friends guess it, you win.</p>
+  </div>
+
+  <h2>Join the Game</h2>
+  <form method="post" action="{{ url_for('join_game', game_id=game_id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input name="player2_secret" placeholder="Your secret English word" required pattern="[A-Za-z]{3,}">
+    <button type="submit">Join Game</button>
+  </form>
+  {% if error %}<p>{{ error }}</p>{% endif %}
+</div>
+{% endblock %}

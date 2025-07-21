@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <title>{% block title %}Bypeyes{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+</head>
+<body class="theme-dark">
+  <nav>
+   <div class="brand">Bypeyes</div>
+   <a href="{{ url_for('index') }}">New Game</a>
+   <button class="help-btn" onclick="openHelp()">How to play</button>
+
+  </nav>
+  <div id="help-modal" class="modal hidden">
+    <div class="modal-card">
+      <h3>How to play</h3>
+      <p>Each player has a secret word. Can you chat without the AI moderator guessing yours? Can you outsmart an AI?</p>
+      <p>Every player gets a secret word, and you have to talk to other players without saying your word, but you can give tips that can help them understand you. Meanwhile, there's an AI moderator that's reading everything, and trying to guess your secret word from the words you send. So your job is to give good hints, but still trick the robot so it can’t guess your secret word. If the AI guesses your word, you lose. If your friends guess it, you win.</p>
+      <button class="close-btn" onclick="closeHelp()">✕ Close</button>
+    </div>
+  </div>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+  <script>
+    function copyJoinLink() {
+      const linkInput = document.getElementById('join-link');
+      const status = document.getElementById('copy-status');
+      linkInput.select();
+      linkInput.setSelectionRange(0, 99999); // mobile compatibility
+      navigator.clipboard.writeText(linkInput.value).then(() => {
+        status.style.display = 'inline';
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 1500);
+      });
+    }
+        /* ── Help modal open / close ────────────────────────────────────── */
+        function openHelp() {
+      document.getElementById('help-modal')?.classList.remove('hidden');
+    }
+    function closeHelp() {
+      document.getElementById('help-modal')?.classList.add('hidden');
+    }
+    // Allow ESC key to dismiss
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeHelp();
+    });
+  </script>
+  
+  <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+  <audio id="sound-send" src="{{ url_for('static', filename='audio/send.wav') }}"></audio>
+  <audio id="sound-win" src="{{ url_for('static', filename='audio/win.wav') }}"></audio>
+  <audio id="sound-lose" src="{{ url_for('static', filename='audio/lose.wav') }}"></audio>
+</body>
+</html>
