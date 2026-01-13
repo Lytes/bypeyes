@@ -1,7 +1,7 @@
 import os
 
 DB_PATH = os.getenv("DATABASE_URL", "sqlite:///games.db")
-SECRET_KEY = os.getenv("SECRET_KEY", "svd3hc732h98n23waefvn8nv89n23vnvhwbv94289v789234vp98fbfubef27h")
+SECRET_KEY = os.getenv("SECRET_KEY", "")
 OPENAI_API_KEY = os.getenv(
     "OPENAI_API_KEY", "")
 MODEL_COMRADE = os.getenv("MODEL_COMRADE", "gpt-4o-mini")
